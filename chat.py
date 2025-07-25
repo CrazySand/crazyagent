@@ -95,13 +95,14 @@ class Chat:
                     func_name = tool_call.function.name
                     # func_args is an empty string the first time, and a non-empty string in subsequent occurrences
                     func_args = tool_call.function.arguments
-                    if tool_call.id not in tools_to_call and tool_call.id is not None:
+                    if tool_call.id and tool_call.id not in tools_to_call:
                         now_tool_call_id = tool_call.id
                         tools_to_call[now_tool_call_id]['tool_name'] = func_name
 
                     if not tools_to_call[now_tool_call_id].get('tool_args'):
                         tools_to_call[now_tool_call_id]['tool_args'] = ''
-                    tools_to_call[now_tool_call_id]['tool_args'] += func_args
+                    if func_args is not None:
+                        tools_to_call[now_tool_call_id]['tool_args'] += func_args
                     continue
                 # Handle content in non-termination cases
                 if content is None: continue
@@ -242,13 +243,14 @@ class Chat:
                     func_name = tool_call.function.name
                     # func_args is an empty string the first time, and a non-empty string in subsequent occurrences
                     func_args = tool_call.function.arguments
-                    if tool_call.id not in tools_to_call and tool_call.id is not None:
+                    if tool_call.id and tool_call.id not in tools_to_call:
                         now_tool_call_id = tool_call.id
                         tools_to_call[now_tool_call_id]['tool_name'] = func_name
 
                     if not tools_to_call[now_tool_call_id].get('tool_args'):
                         tools_to_call[now_tool_call_id]['tool_args'] = ''
-                    tools_to_call[now_tool_call_id]['tool_args'] += func_args
+                    if func_args is not None:
+                        tools_to_call[now_tool_call_id]['tool_args'] += func_args
                     continue
                 # Handle content in non-termination cases
                 if content is None: continue
@@ -374,7 +376,7 @@ class Chat:
                 usage = dict(chunk.usage)
             case 'kimi':
                 usage: dict = chunk.choices[0].usage
-            case 'ollama':
+            case 'ollama'|'qwen':
                 # ollama does not return usage information in the stream response.
                 return {
                     'input_tokens': 0,
@@ -402,6 +404,9 @@ class Chat:
             case 'ollama':
                 if temperature is None:
                     return 0.0
+            case 'qwen':
+                temperature_range = (0, 2)
+                default_temperature = 1.0
 
         if temperature is None:
             return default_temperature
@@ -409,7 +414,7 @@ class Chat:
             raise ValueError('temperature must be a float')
         if not (temperature_range[0] <= temperature <= temperature_range[1]):
             raise ValueError(f'temperature must be in range {temperature_range}')
-        
+             
 class CloseAI(Chat):
 
     def __init__(
@@ -453,3 +458,14 @@ class Ollama(Chat):
     ):
         super().__init__(api_key, base_url, model)
         self.name = 'ollama'
+
+class Qwen(Chat):
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        base_url: str = 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    ):
+        super().__init__(api_key, base_url, model)
+        self.name = 'qwen'
