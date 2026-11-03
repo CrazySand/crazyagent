@@ -75,7 +75,7 @@ def search_image(query: str = Argument('Search keyword'), page: int = Argument('
         'type': 'feed',
         '_': (time.time() * 1000)
     }
-    data = requests.get(url=url, params=params, headers=HEADERS).json()
+    data = requests.get(url=url, params=params, headers=HEADERS, timeout=30).json()
     url_list = []
     for i in data['data']['object_list']:
         url = i['photo']['path']
